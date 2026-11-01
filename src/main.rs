@@ -1,25 +1,31 @@
-use color_eyre::{
-    eyre::{bail, WrapErr},
-    Result,
-};
+/// Application.
+pub mod app;
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::{
-    buffer::Buffer,
-    layout::Rect,
-    style::Stylize,
-    symbols::border,
-    text::{Line, Text},
-    widgets::{Block, Paragraph, Widget},
-    DefaultTerminal, Frame,
-};
+/// Terminal events handler.
+pub mod event;
+
+// /// Widget renderer.
+// pub mod ui;
+//
+// /// Terminal user interface.
+// pub mod tui;
+//
+/// Application updater.
+pub mod update;
+use app::App;
+
+use color_eyre::Result;
+use event::{Event, EventHandler}
+use ratatui::{backend::CrosstermBackend, Terminal};
+use tui::Tui;
+use update::update;
 
 fn main() -> Result<()> {
-    color_eyre::install()?;
-    let mut terminal = ratatui::init();
-    let app_result = App::default().run(&mut terminal);
-    ratatui::restore();
-    app_result
+    // Create an application.
+    let mut app = App::new();
+
+    // Initialize the terminal user interface.
+    let backend = CrosstermBackend::new(std::io::stderr());
 }
 
 #[derive(Debug, Default)]
@@ -29,7 +35,7 @@ pub struct App {
 }
 
 impl App {
-    // runs the application's main loop until the user quits
+    /// runs the application's main loop until the user quits
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         while !self.exit {
             terminal.draw(|frame| self.render_frame(frame))?;
@@ -42,7 +48,7 @@ impl App {
         frame.render_widget(self, frame.area());
     }
 
-    // updates the application's state based on user input
+    /// updates the application's state based on user input
     fn handle_events(&mut self) -> Result<()> {
         match event::read()? {
             // it's important to check that the event is a key press event as
@@ -175,17 +181,3 @@ mod tests {
     }
 }
 
-// application
-pub mod app;
-
-// terminal events handler
-pub mod event;
-
-// widget renderer
-pub mod ui;
-
-// terminal user interface
-pub mod tui;
-
-// application updater
-pub mod update;
